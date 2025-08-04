@@ -1,7 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import ema_1d
-print('hello world')
 
 class CNN_EMA1D_Block(nn.Module):
     """A convolutional block that combines 1D convolution, ReLU activation,
