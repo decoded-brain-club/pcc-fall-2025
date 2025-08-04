@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+print('hello world')
 
 class EMA1D(nn.Module):
     """Applies Efficient Multi Scale Attention (EMA) over 1D sequence data.

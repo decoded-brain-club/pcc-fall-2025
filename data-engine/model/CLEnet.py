@@ -5,6 +5,9 @@ import features as feat
 import ema_1d
 import temporal as temp
 
+print('hello world')
+
+
 class CLEnet(nn.Module):
     """CNN, LSTM, EMA-1D (CLEnet)
 
