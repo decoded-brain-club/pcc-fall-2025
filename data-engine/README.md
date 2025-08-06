@@ -1,7 +1,7 @@
 # Data Engine
 
 ## Module Overview
-This module is focued on generating a machine learning dataset. The dataset will comprise of two copies of signal data, one raw and one cleaned from artifacts. Each data peice will comprise of a single channel 2-second epoch. This will be used to train an artifact removal model.
+This module is focued on generating a machine learning dataset. The dataset will comprise of two copies of signal data, one raw and one cleaned from artifacts. Each data peice will comprise of a single channel 2-second epoch (256 Hz). This will be used to train an artifact removal model.
 
 ### Tasks
 - Apply minimal preprocessing (filters and resampling) to raw data

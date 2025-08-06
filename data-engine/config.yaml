@@ -1,0 +1,63 @@
+data:
+  raw_data_path: "data/original/01_tcp_ar" # Raw data directory
+  raw_training_epochs_path: "data/raw/raw_training_epochs"
+  raw_validation_epochs_path: "data/raw/raw_validation_epochs"
+  raw_testing_epochs_path: "data/raw/raw_testing_epochs"
+  clean_training_epochs_path: "data/clean/clean_training_epochs"
+  clean_validation_epochs_path: "data/clean/clean_validation_epochs"
+  clean_testing_epochs_path: "data/clean/clean_testing_epochs"
+  matlab_workspace_path: "matlab" # MATLAB workspace and dependencies
+  cap: 10 # Maximum number of data files to load (for testing), set to null for full dataset
+
+plugin:
+  eeglab_absolute_path: "/Users/elijahghossein/Documents/MATLAB/eeglab2025.0.0" # Path to EEGLAB
+
+logging:
+  log_path: "logs"
+
+processing:
+  epoch_duration: 2  # seconds
+  step_duration: 1   # seconds
+  target_sfreq: 256  # Hz
+  minimum_time_per_weight: 30 # time points
+  file_shuffle_seed: 42 # Seed for shuffling files
+  random_state_seed: 97 # Random state for ICA
+  mwf_passes: 3 # Multi-channel Wiener filtering passes
+  expected_channels: 21 # Expected number of EEG channels in dataset
+  exclude_channels: ["SUPPR", 
+                    "BURSTS",
+                    "PHOTIC-REF",
+                    "EMG-REF",
+                    "EEG EKG1-REF",
+                    "IBI",
+                    "EEG 32-REF",
+                    "EEG 31-REF",
+                    "EEG 30-REF",
+                    "EEG 29-REF",
+                    "EEG 28-REF",
+                    "EEG 27-REF",
+                    "EEG 26-REF",
+                    "EEG LOC-REF",
+                    "EEG ROC-REF",
+                    "EEG T1-REF",
+                    "EEG T2-REF",
+                    "EEG RESP1-REF",
+                    "EEG RESP2-REF",
+                    "EEG RLC-REF",
+                    "EEG LUC-REF",
+                    "EEG SP1-REF",
+                    "EEG SP2-REF",
+                    "EEG EKG-REF",
+                    "EEG C3P-REF",
+                    "EEG C4P-REF"
+                    ]  # List of channel names to exclude (if metadata is screwed)
+
+filters:
+  low_cutoff: 0.25   # Hz
+  high_cutoff: 80.0 # Hz
+  notch_filter_range: [57, 63]  # inclusive range in Hz ([47, 53] for Europe, [57, 63] for U.S.)
+
+data_split:
+  training: 0.8
+  validation: 0.1
+  testing: 0.1

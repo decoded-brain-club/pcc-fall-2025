@@ -1,0 +1,75 @@
+#
+# Note: the following configurations were removed so they can be defaulted (they can be re-added if necessary, but data type conversion is needed):
+# - HorizontalEyeMovementTimepointsTestWindow=(2*RELAX_cfg.HorizontalEyeMovementTimepointsExceedingThreshold)-1;
+# - ICLabel_thresholds=[0 0 0 0 0 0 0];
+
+Perform_targeted_wICA: 1 # This is the recommended artifact reduction method.
+Do_MWF_Once: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for no).
+Do_MWF_Twice: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for no).
+Do_MWF_Thrice: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for no). I think cleaning drift in this is a good idea.
+Perform_wICA_on_ICLabel: 0 # 1 = Perform wICA on artifact components marked by ICLabel (1 for yes, 0 for no).
+Perform_ICA_subtract: 0 # 1 = Perform ICA subtract on artifact components marked by ICLabel (1 for yes, 0 for no) (non-optimal, intended to be optionally used separately to wICA rather than additionally)
+ICA_method: "picard" # Default ICA method
+Report_all_ICA_info: "no" # set to yes to provide detailed report of ICLabel artifact information. Runs ~20s slower per file.
+Clean_other_comps: "no" # set to yes to clean independent components other than blinks and muscle activity
+computerawmetrics: 1 # Compute blink and muscle metrics from the raw data?
+computecleanedmetrics: 1 # Compute SER, ARR, blink and muscle metrics from the cleaned data?
+MWFRoundToCleanBlinks: 2 # Which round to clean blinks in (1 for the first, 2 for the second...)
+LowPassFilterAt_6Hz_BeforeDetectingBlinks: "no" # low pass filters the data @ 6Hz prior to blink detection (helps if high power alpha is disrupting blink detection, not necessary in the vast majority of cases, default = 'no')
+ProbabilityDataHasNoBlinks: 0 # 0 = data almost certainly has blinks, 1 = data might not have blinks, 2 = data definitely doesn't have blinks.
+# 0 = eg. task related data where participants are focused with eyes open,
+# 1 = eg. eyes closed recordings, but with participants who might still open their eyes at times,
+# 2 = eg. eyes closed resting with highly compliant participants and recordings that were strictly made only when participants had their eyes closed.
+DriftSeverityThreshold: 10 # MAD from the median of all electrodes. This could be set lower and would catch less severe drift
+ProportionWorstEpochsForDrift: 0.30 # Maximum proportion of epochs to include in the mask from drift artifact type.
+ExtremeVoltageShiftThreshold: 25 # Threshold MAD from the median all epochs for each electrode against the same electrode in different epochs. This could be set lower and would catch less severe voltage shifts within the epoch
+ExtremeAbsoluteVoltageThreshold: 1000 # microvolts max or min above which will be excluded from cleaning and deleted from data
+ExtremeImprobableVoltageDistributionThreshold: 10 # Threshold SD from the mean of all epochs for each electrode against the same electrode in different epochs. This could be set lower and would catch less severe improbable data
+ExtremeSingleChannelKurtosisThreshold: 10 # Threshold kurtosis of each electrode against the same electrode in different epochs. This could be set lower and would catch less severe kurtosis
+ExtremeAllChannelKurtosisThreshold: 10 # Threshold kurtosis across all electrodes. This could be set lower and would catch less severe kurtosis
+ExtremeDriftSlopeThreshold: -4 # slope of log frequency log power below which to reject as drift without neural activity
+ExtremeBlinkShiftThreshold: 10 # How many MAD from the median across blink affected epochs to exclude as extreme data
+MinimumArtifactDuration: 1200 # in ms. It's better to make this value longer than 1000ms, as doing so will catch diminishing artifacts that aren't detected in a neighbouring 1000ms period, which might still be bad
+MinimumBlinkArtifactDuration: 800 # blink marking is based on the maximum point of the blink rather than the 1000ms divisions for muscle artifacts, so this can be shorter than the value above (blinks do not typically last >500ms)
+
+BlinkElectrodes: ["FP1", "FPZ", "FP2", "AF3", "AF4", "F3", "F1", "FZ", "F2", "F4"] # sets the electrodes to average for blink detection using the IQR method. These should be frontal electrodes maximally affected by blinks. The order is the order of preference for icablinkmetrics.
+HEOGLeftpattern: ["AF7", "F7", "FT7", "F5", "T7", "FC5", "C5", "TP7", "AF3"] # sets left side electrodes to use for horizontal eye movement detection. These should be lateral electrodes maximally effected by blinks.
+HEOGRightpattern: ["AF8", "F8", "FT8", "F6", "T8", "FC6", "C6", "TP8", "AF4"] # sets right side electrodes to use for horizontal eye movement detection. These should be lateral electrodes maximally effected by blinks.
+
+BlinkMaskFocus: 150 # this value decides how much data before and after the right and left base of the eye blink to mark as part of the blink artifact window.
+# I found 100ms on either side of the blink bases works best with a delay of 7 on the MWF. However, it also seemed to create too short artifact masks at times, which may lead to insufficient rank for MWF, so I left the default as 150ms.
+HorizontalEyeMovementType: 2 # 1 to use the IQR method, 2 to use the MAD method for identifying threshold. IQR method less effective for smaller sample sizes (shorter files).
+HorizontalEyeMovementThreshold: 2 # MAD deviation from the median that will be marked as horizontal eye movement if both lateral electrodes show activity above this for a certain duration (duration set below).
+HorizontalEyeMovementThresholdIQR: 1.5 # If IQR method set above, IQR deviation that will be marked as horizontal eye movement if both lateral electrodes show activity above this for a certain duration (duration set below).
+HorizontalEyeMovementTimepointsExceedingThreshold: 25 # The number of timepoints (ms) that exceed the horizontal eye movement threshold within the test period (set below) before the period is marked as horizontal eye movement.
+LowPassFilterBeforeMWF: "no" # set as no for the updated implementation, avoiding low pass filtering prior to MWF reduces chances of rank deficiencies, increasing potential values for MWF delay period
+FilterType: "Butterworth" # set as 'pop_eegfiltnew' to use EEGLAB's filter or 'Butterworth' to use Butterworth filter
+causal_or_acausal_filter: "acausal" # set as 'acausal' or 'causal'.
+NotchFilterType: "Butterworth" # set as 'Butterworth' to use Butterworth filter or 'ZaplinePlus' to use ZaplinePlus. ZaplinePlus works best on data sampled at 512Hz or below, consider downsampling if above this.
+HighPassFilter: 0.5 # Sets the high pass filter. 1Hz is best for ICA decomposition if you're examining just oscillatory data, 0.25Hz seems to be the highest before ERPs are adversely affected by filtering
+LowPassFilter: 80 # If you filter out data below 75Hz, you can't use the objective muscle detection method
+DownSample: 0 # set to 1 if you wish to downsample the data
+DownSample_to_X_Hz: 250 # frequency to downsample to (in samples per second / Hz)
+LineNoiseFrequency: 50 # Frequencies for bandstop filter in order to address line noise (set to 60 in countries with 60Hz line noise, and 50 in countries with 50Hz line noise).
+
+# If your EEG recording includes non-scalp electrodes or electrodes that you want to delete before cleaning, you can set them to be deleted here.
+ElectrodesToDelete: ["CB1", "CB2", "HEOG", "IO1", "M1", "M2", "LO1", "LO2", "E1", "E3", "ECG", "SO1", "ECG", "SPARE1", "SPARE2", "SPARE3", "BP1", "BP2", "VEOG"]
+
+KeepAllInfo: 0 # setting this value to 1 keeps all the details from the MWF pre-processing and MWF computation. Helpful for debugging if necessary but makes for large file sizes.
+saveextremesrejected: 0 # setting this value to 1 tells the script to save the data after only filtering, extreme channels have been rejected and extreme periods have been noted
+saveround1: 0 # setting this value to 1 tells the script to save the first round of MWF pre-processing
+saveround2: 0 # setting this value to 1 tells the script to save the second round of MWF pre-processing
+saveround3: 0 # setting this value to 1 tells the script to save the third round of MWF pre-processing
+OnlyIncludeTaskRelatedEpochs: 0 # If this =1, the MWF clean and artifact templates will only include data within 5 seconds of a task trigger (other periods will be marked as NaN, which the MWF script ignores).
+MuscleSlopeThreshold: -0.31 # log-frequency log-power slope threshold for muscle artifact. Less stringent = -0.31, Middle Stringency = -0.59 or more stringent = -0.72, more negative thresholds remove more muscle.
+MaxProportionOfDataCanBeMarkedAsMuscle: 0.50 # Maximum amount of data periods to be marked as muscle artifact for cleaning by the MWF. You want at least a reasonable amount of both clean and artifact templates for effective cleaning.
+# I set this reasonably high, because otherwise muscle artifacts could considerably influence the clean mask and add noise into the data
+ProportionOfMuscleContaminatedEpochsAboveWhichToRejectChannel: 0.50 # If the proportion of epochs showing muscle activity from an electrode is higher than this, the electrode is deleted.
+# Set muscle proportion before deletion to 1 to not delete electrodes based on muscle activity
+ProportionOfExtremeNoiseAboveWhichToRejectChannel: 0.25 # If the proportion of all epochs from a single electrode that are marked as containing extreme artifacts is higher than this, the electrode is deleted
+MaxProportionOfElectrodesThatCanBeDeleted: 0.10 # Sets the maximum proportion of electrodes that are allowed to be deleted after PREP's bad electrode deletion step
+InterpolateRejectedElectrodesAfterCleaning: "no" # Interpolate rejected electrodes back into the data after each file has been cleaned and before saving the cleaned data?
+MWFDelayPeriod_for_eye_movements: 10 # The MWF includes both spatial and temporal information when filtering out artifacts. Longer delays apparently improve performance.
+MWFDelayPeriod_for_muscle_artifacts: 10 # The MWF includes both spatial and temporal information when filtering out artifacts. Longer delays apparently improve performance.
+MWF_delay_spacing_for_eye_movements: 16 # The MWF includes both spatial and temporal information when filtering out artifacts. Longer delays apparently improve performance.
+MWF_delay_spacing_for_muscle_artifacts: 2 # The MWF includes both spatial and temporal information when filtering out artifacts. Longer delays apparently improve performance.
