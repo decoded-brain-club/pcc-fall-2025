@@ -1,9 +1,14 @@
 #
-# Note: the following configurations were removed so they can be defaulted (they can be re-added if necessary, but data type conversion is needed):
+# NOTE: The following configurations were removed so they can be defaulted (they can be re-added if necessary, but data type conversion is needed):
 # - HorizontalEyeMovementTimepointsTestWindow=(2*RELAX_cfg.HorizontalEyeMovementTimepointsExceedingThreshold)-1;
 # - ICLabel_thresholds=[0 0 0 0 0 0 0];
+#
+# NOTE: The following configurations were changed
+# - ICA_method: default was "picard"
+#
+# NOTE: Keep electrode naming consistent with .elp file (lowercase)
 
-filename: null # set automatically by data engine
+filename: null # Remains null and gets set by the processor
 
 Perform_targeted_wICA: 1 # This is the recommended artifact reduction method.
 Do_MWF_Once: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for no).
@@ -11,7 +16,7 @@ Do_MWF_Twice: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for n
 Do_MWF_Thrice: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for no). I think cleaning drift in this is a good idea.
 Perform_wICA_on_ICLabel: 0 # 1 = Perform wICA on artifact components marked by ICLabel (1 for yes, 0 for no).
 Perform_ICA_subtract: 0 # 1 = Perform ICA subtract on artifact components marked by ICLabel (1 for yes, 0 for no) (non-optimal, intended to be optionally used separately to wICA rather than additionally)
-ICA_method: "picard" # Default ICA method
+ICA_method: "amica"
 Report_all_ICA_info: "no" # set to yes to provide detailed report of ICLabel artifact information. Runs ~20s slower per file.
 Clean_other_comps: "no" # set to yes to clean independent components other than blinks and muscle activity
 computerawmetrics: 1 # Compute blink and muscle metrics from the raw data?
@@ -34,9 +39,9 @@ ExtremeBlinkShiftThreshold: 10 # How many MAD from the median across blink affec
 MinimumArtifactDuration: 1200 # in ms. It's better to make this value longer than 1000ms, as doing so will catch diminishing artifacts that aren't detected in a neighbouring 1000ms period, which might still be bad
 MinimumBlinkArtifactDuration: 800 # blink marking is based on the maximum point of the blink rather than the 1000ms divisions for muscle artifacts, so this can be shorter than the value above (blinks do not typically last >500ms)
 
-BlinkElectrodes: ["FP1", "FPZ", "FP2", "AF3", "AF4", "F3", "F1", "FZ", "F2", "F4"] # sets the electrodes to average for blink detection using the IQR method. These should be frontal electrodes maximally affected by blinks. The order is the order of preference for icablinkmetrics.
-HEOGLeftpattern: ["AF7", "F7", "FT7", "F5", "T7", "FC5", "C5", "TP7", "AF3"] # sets left side electrodes to use for horizontal eye movement detection. These should be lateral electrodes maximally effected by blinks.
-HEOGRightpattern: ["AF8", "F8", "FT8", "F6", "T8", "FC6", "C6", "TP8", "AF4"] # sets right side electrodes to use for horizontal eye movement detection. These should be lateral electrodes maximally effected by blinks.
+BlinkElectrodes: ["fp1", "fpz", "fp2", "af3", "af4", "f3", "f1", "fz", "f2", "f4"] # sets the electrodes to average for blink detection using the IQR method. These should be frontal electrodes maximally affected by blinks. The order is the order of preference for icablinkmetrics.
+HEOGLeftpattern: ["af7", "f7", "ft7", "f5", "t7", "fc5", "c5", "tp7", "af3"] # sets left side electrodes to use for horizontal eye movement detection. These should be lateral electrodes maximally effected by blinks.
+HEOGRightpattern: ["af8", "f8", "ft8", "f6", "t8", "fc6", "c6", "tp8", "af4"] # sets right side electrodes to use for horizontal eye movement detection. These should be lateral electrodes maximally effected by blinks.
 
 BlinkMaskFocus: 150 # this value decides how much data before and after the right and left base of the eye blink to mark as part of the blink artifact window.
 # I found 100ms on either side of the blink bases works best with a delay of 7 on the MWF. However, it also seemed to create too short artifact masks at times, which may lead to insufficient rank for MWF, so I left the default as 150ms.

@@ -36,9 +36,21 @@ class Config:
             return str(self.project_root / path_obj)
     
     @property
-    def raw_data_path(self) -> str:
-        return self._resolve_path(self.config['data']['raw_data_path'])
-    
+    def original_data_path(self) -> str:
+        return self._resolve_path(self.config['data']['original_data_path'])
+
+    @property
+    def unprocessed_training_epochs_path(self) -> str:
+        return self._resolve_path(self.config['data']['unprocessed_training_epochs_path'])
+
+    @property
+    def unprocessed_validation_epochs_path(self) -> str:
+        return self._resolve_path(self.config['data']['unprocessed_validation_epochs_path'])
+
+    @property
+    def unprocessed_testing_epochs_path(self) -> str:
+        return self._resolve_path(self.config['data']['unprocessed_testing_epochs_path'])
+
     @property
     def raw_training_epochs_path(self) -> str:
         return self._resolve_path(self.config['data']['raw_training_epochs_path'])

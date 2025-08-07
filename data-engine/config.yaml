@@ -1,5 +1,8 @@
 data:
-  raw_data_path: "data/original/01_tcp_ar" # Raw data directory
+  original_data_path: "PATH TO DATASET" # Original data directory (this should be changed according to your dataset)
+  unprocessed_training_epochs_path: "data/unprocessed/unprocessed_training_epochs"
+  unprocessed_validation_epochs_path: "data/unprocessed/unprocessed_validation_epochs"
+  unprocessed_testing_epochs_path: "data/unprocessed/unprocessed_testing_epochs"
   raw_training_epochs_path: "data/raw/raw_training_epochs"
   raw_validation_epochs_path: "data/raw/raw_validation_epochs"
   raw_testing_epochs_path: "data/raw/raw_testing_epochs"
@@ -7,11 +10,11 @@ data:
   clean_validation_epochs_path: "data/clean/clean_validation_epochs"
   clean_testing_epochs_path: "data/clean/clean_testing_epochs"
   matlab_workspace_path: "matlab" # MATLAB workspace and dependencies
-  cap: 3 # Maximum number of data files to load (for testing), set to null for full dataset
+  cap: null # Maximum number of data files to load (for testing), set to null for full dataset
   caploc_file_path: "caploc/tuh-tcp-ar-cap.elp" # Path to channel coordinates
 
 plugin:
-  eeglab_absolute_path: "/Users/elijahghossein/Documents/MATLAB/eeglab2025.0.0" # Path to EEGLAB
+  eeglab_absolute_path: "PATH TO EEGLAB PLUGIN" # Path to EEGLAB
 
 logging:
   log_path: "logs"
@@ -21,7 +24,7 @@ processing:
   step_duration: 1   # seconds
   target_sfreq: 256  # Hz
   minimum_time_per_weight: 30 # time points
-  file_shuffle_seed: 42 # Seed for shuffling files
+  file_shuffle_seed: 97 # Seed for shuffling files
   random_state_seed: 97 # Random state for ICA
   mwf_passes: 3 # Multi-channel Wiener filtering passes
   expected_channels: 21 # Expected number of EEG channels in dataset

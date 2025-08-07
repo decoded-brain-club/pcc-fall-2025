@@ -11,6 +11,7 @@ import torch
 from pathlib import Path
 import matlab.engine
 import shutil
+from utilities import run_with_loading_animation
 
 # Auto-detects environment
 try:
@@ -19,26 +20,30 @@ except ImportError:
     from tqdm import tqdm
 
 class DatasetLoader(ABC):
-    def __init__(self, config, raw: bool, cap: int):
+    def __init__(self, config, mode: str = 'unprocessed'):
         self.config = config # Configurations
-        self.raw = raw # Mode
-        self.cap = cap # Maximum number of data files to load (for testing)
+        self.mode = mode # Mode
+        self.cap = self.config.cap # Maximum number of data files to load (for testing)
 
-        self.dir_path = Path(__file__).parent.parent / config.raw_data_path
-        self.file_paths = self.__load_file_paths(cap)
+        self.dir_path = Path(__file__).parent.parent / config.original_data_path
+        self.file_paths = self.__load_file_paths(self.cap)
 
         # Data containers
         self.training_data: List[EEGData] = []
         self.validation_data: List[EEGData] = []
         self.testing_data: List[EEGData] = []
 
+    def unprocessed_mode(self):
+        """Switch loader to unprocessed mode when working with original data."""
+        self.mode = 'unprocessed'
+
     def raw_mode(self):
         """Switch loader to raw mode when working with unprocessed data."""
-        self.raw = True
+        self.mode = 'raw'
 
     def clean_mode(self):
         """Switch loader to clean mode when working with preprocessed (filtered) data."""
-        self.raw = False
+        self.mode = 'clean'
 
     def __load_file_paths(self, cap) -> List[str]:
         """Load .edf and .set file paths from the dataset directory and return them as a list of strings.
@@ -107,7 +112,8 @@ class DatasetLoader(ABC):
 
         Parameters:
             process (str): Specifies the processing step to perform. 
-                - "filter": Applies filtering to raw data (only allowed in raw mode).
+                - "unprocessed": No processing, just saves original data.
+                - "filter": Applies filtering to original data (only allowed in raw mode).
                 - "artifact_correction": Applies artifact correction using MATLAB EEGLAB (only allowed in clean mode).
 
         Expected Behavior:
@@ -142,15 +148,22 @@ class DatasetLoader(ABC):
             os.makedirs(dir_path, exist_ok=True)
 
             # Process
-            if process == "filter":
-                if not self.raw: raise ValueError("You cannot filter data in clean mode.")
+            if process == "unprocessed":
+                continue
+            elif process == "filter":
+                if not self.mode == 'raw': raise ValueError("You can only filter data in raw mode.")
                 processor.filter(self.config, eeg_data)
             elif process == "relax":
-                if self.raw: raise ValueError("You cannot correct artifacts in raw mode.")
-                # Use a simpler progress indicator for RELAX
-                with tqdm(total=None, desc=f"RELAX: {eeg_data.file_name}", 
-                         bar_format='{desc} {elapsed}', leave=False) as pbar:
-                    processor.relax_pipeline(self.config, engine, eeg_data)
+                if not self.mode == 'clean': raise ValueError("You can only correct artifacts in clean mode.")
+                # Use the loading animation helper function
+                run_with_loading_animation(
+                    processor.relax_pipeline, 
+                    self.config, 
+                    engine, 
+                    eeg_data,
+                    process_name="RELAX",
+                    file_name=eeg_data.file_name
+                )
             else:
                 raise ValueError(f"You must specify a valid process: 'filter' or 'artifact_correction'. Got: {process}")
 
@@ -195,13 +208,13 @@ class DatasetLoader(ABC):
 
     def _prepare_mode(self):
         """
-        Helper method to prepare paths and engine based on raw/clean mode.
+        Helper method to prepare paths and engine based on mode.
         Returns:
-            tag (str): 'raw' or 'clean'
+            tag (str): 'raw', 'clean', or 'unprocessed'
             engine (matlab.engine.MatlabEngine or None): MATLAB engine if clean mode, else None
         """
         engine = None
-        if not self.raw:
+        if self.mode == 'clean':
             tag = "clean"
             train = Path(__file__).parent.parent / self.config.clean_training_epochs_path
             val = Path(__file__).parent.parent / self.config.clean_validation_epochs_path
@@ -222,7 +235,7 @@ class DatasetLoader(ABC):
             engine.eval("warning('off', 'all');", nargout=0, stdout=stdout_buffer, stderr=stderr_buffer)
             engine.cd(self.config.eeglab_absolute_path, nargout=0)
             engine.eval("eeglab; close;", nargout=0, stdout=stdout_buffer, stderr=stderr_buffer)
-        else:
+        elif self.mode == 'raw':
             tag = "raw"
             train = Path(__file__).parent.parent / self.config.raw_training_epochs_path
             val = Path(__file__).parent.parent / self.config.raw_validation_epochs_path
@@ -234,21 +247,39 @@ class DatasetLoader(ABC):
                     shutil.rmtree(path)
                 os.makedirs(path, exist_ok=True)
             print("Cleaning done.")
+        elif self.mode == 'unprocessed':
+            tag = "unprocessed"
+            train = Path(__file__).parent.parent / self.config.unprocessed_training_epochs_path
+            val = Path(__file__).parent.parent / self.config.unprocessed_validation_epochs_path
+            test = Path(__file__).parent.parent / self.config.unprocessed_testing_epochs_path
+            # Clear and recreate directories to avoid mixing with previous runs
+            print("Clearing directories for unprocessed mode...")
+            for path in [train, val, test]:
+                if path.exists():
+                    shutil.rmtree(path)
+                os.makedirs(path, exist_ok=True)
+            print("Cleaning done.")
         return tag, engine
 
     def __iter__(self):
         root = Path(__file__).parent.parent
-        if self.raw:
+        if self.mode == 'raw':
             self._iterator_data = (
                 [(eeg_data, root / self.config.raw_training_epochs_path) for eeg_data in self.training_data] +
                 [(eeg_data, root / self.config.raw_validation_epochs_path) for eeg_data in self.validation_data] +
                 [(eeg_data, root / self.config.raw_testing_epochs_path) for eeg_data in self.testing_data]
             )
-        else:
+        elif self.mode == 'clean':
             self._iterator_data = (
                 [(eeg_data, root / self.config.clean_training_epochs_path) for eeg_data in self.training_data] +
                 [(eeg_data, root / self.config.clean_validation_epochs_path) for eeg_data in self.validation_data] +
                 [(eeg_data, root / self.config.clean_testing_epochs_path) for eeg_data in self.testing_data]
+            )
+        elif self.mode == 'unprocessed':
+            self._iterator_data = (
+                [(eeg_data, root / self.config.unprocessed_training_epochs_path) for eeg_data in self.training_data] +
+                [(eeg_data, root / self.config.unprocessed_validation_epochs_path) for eeg_data in self.validation_data] +
+                [(eeg_data, root / self.config.unprocessed_testing_epochs_path) for eeg_data in self.testing_data]
             )
         self._index = 0
         return self
@@ -305,9 +336,8 @@ class DatasetLoader(ABC):
         
         # Generate filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        mode = "raw" if self.raw else "clean"
-        filename = f"dataset_loader_{mode}_{timestamp}.pkl"
-        
+        filename = f"dataset_loader_{self.mode}_{timestamp}.pkl"
+
         # Ensure .pkl extension
         if not filename.endswith('.pkl'):
             filename += '.pkl'
@@ -317,7 +347,7 @@ class DatasetLoader(ABC):
         # Create state dictionary with all important attributes
         state = {
             'config': self.config,
-            'raw': self.raw,
+            'mode': self.mode,
             'cap': self.cap,
             'dir_path': self.dir_path,
             'file_paths': self.file_paths,
@@ -359,7 +389,7 @@ class DatasetLoader(ABC):
         
         # Set all attributes from saved state
         instance.config = use_config
-        instance.raw = state['raw']
+        instance.mode = state['mode']
         instance.cap = state['cap']
         instance.dir_path = state['dir_path']
         instance.file_paths = state['file_paths']

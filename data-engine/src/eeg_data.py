@@ -41,13 +41,18 @@ class EEGData:
         picks = mne.pick_types(self.raw.info, eeg=True)
         self.raw.pick(picks)
 
-        self._remove_channels(self.config.exclude_channels)  # Remove user specified channels if any
+        # Remove user specified channels if any
+        self._remove_channels(self.config.exclude_channels)  
+
+        # Resample
+        self.raw.resample(self.config.target_sfreq, npad='auto', window='boxcar', verbose=False)
 
         # Clean channel names (must come after _remove_channels())
         self._clean_channel_names()
 
+        # Number of EEG channels
         channels = self.raw.info['ch_names']
-        self.num_channels = len(channels) # Number of EEG channels
+        self.num_channels = len(channels)
 
         if self.num_channels is not self.config.expected_channels:
             print(f"WARNING: inspect file: {self.file_name}, channels: {self.num_channels}")
@@ -91,37 +96,59 @@ class EEGData:
         data = self.raw.get_data()
         return channels, data
     
-    def log_plot(self, label: str):
-        """Save a plot screenshot to a directory with appropriate labeling."""
+    def log_plot(self, label: str, start_time: float = 0.0, duration: float = 60.0, scale: float = 20e-6):
+        """Save a plot screenshot to a directory with appropriate labeling.
+        
+        Args:
+            label (str): Label for the plot
+            start_time (float): Start time in seconds (default: 0.0)
+            duration (float): Duration to plot in seconds (default: 60.0)
+            scale (float): EEG scaling in volts per division (default: 20e-6 = 20 microvolts)
+        """
         # Determine label and output directory based on raw flag
         label = label.lower()
         log_dir = Path(__file__).parent.parent / self.config.log_path / "plots"
         os.makedirs(log_dir, exist_ok=True)
 
-        # Create filename with label
+        # Validate time range
+        max_time = self.raw.times[-1]
+        if start_time < 0:
+            start_time = 0.0
+        if start_time >= max_time:
+            start_time = max_time - duration if max_time > duration else 0.0
+        
+        end_time = start_time + duration
+        if end_time > max_time:
+            end_time = max_time
+            duration = end_time - start_time
+
+        # Create filename with label and time range
         base_name = os.path.splitext(self.file_name)[0]
         plot_filename = f"{base_name}_{label}.png"
         save_path = log_dir / plot_filename
         
-        # Create plot
+        # Create plot with custom figure size (wider)
         fig = self.raw.plot(
             n_channels=len(self.raw.ch_names),
-            scalings='auto',
-            title=f"{self.file_name} ({label})",
-            duration=20.0,
-            show=False  # Don't display the plot
+            scalings={'eeg': scale},
+            title=f"{self.file_name} ({label}) - {start_time:.1f}s to {end_time:.1f}s",
+            duration=duration,
+            start=start_time,
+            show=False  # Don't display
         )
-        
-        # Position text in the top-right corner with background box for better visibility
-        fig.text(0.60, 0.95, f"FILE: {self.file_name}\nLABEL: {label.upper()}", 
+
+        fig.set_size_inches(20, 12)  # Width=20 inches, Height=12 inches
+
+        # Text
+        fig.text(0.60, 0.95, f"FILE: {self.file_name}\nLABEL: {label.upper()}\nTIME: {start_time:.1f}s - {end_time:.1f}s", 
                 ha='left', va='top', fontsize=10, fontweight='medium', 
                 color='red', 
                 bbox=dict(boxstyle="round,pad=0.5", facecolor="white", 
                          edgecolor="red", linewidth=2, alpha=0.9))
 
-        # Save the figure
+        # Save
         fig.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)  # Close to free memory
+        plt.close(fig)
         
         print(f"Plot saved to: {save_path}")
 

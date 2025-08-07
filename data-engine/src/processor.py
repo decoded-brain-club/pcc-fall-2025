@@ -3,12 +3,10 @@ import matlab.engine
 from pathlib import Path
 import os
 import io
-from contextlib import redirect_stdout, redirect_stderr
-from filelock import FileLock
 
 def filter(config, eeg_data):
     """
-    Applies notch, bandpass filter, and resampling to EEGData's raw MNE data.
+    Applies notch and bandpass filter to EEGData's raw MNE data.
     """
     # Notch filter
     notch_range = config.filter_config['notch_filter_range']
@@ -30,8 +28,6 @@ def filter(config, eeg_data):
         phase='zero',
         verbose=False
     )
-    # Resample
-    eeg_data.raw.resample(config.target_sfreq, npad='auto', window='boxcar', verbose=False)
 
 def relax_pipeline(config, engine, eeg_data):
     """
@@ -52,52 +48,25 @@ def relax_pipeline(config, engine, eeg_data):
     engine.cd(str(matlab_workspace), nargout=0)
 
     try:
-        # Suppress MATLAB warnings for this session
-        # engine.eval("warning('off', 'all');", nargout=0, stdout=stdout_buffer, stderr=stderr_buffer)
-        
-        # Load the .set file into MATLAB's EEG structure
-        # engine.eval(f"EEG = pop_loadset('filename', '{set_name}');", nargout=0, stdout=stdout_buffer, stderr=stderr_buffer)
-        
-        # RELAX configuration
+        # Run RELAX
         matlab_cmd = f"""
         RELAX_config = load_RELAX_config('RELAX_config.yaml');
         RELAX_config.myPath = '{matlab_workspace}/';
         RELAX_config.filename = '{set_path}';
         """
         engine.eval(matlab_cmd, nargout=0)
-
         engine.eval("pop_RELAX(RELAX_config);", nargout=0)
 
-        raise Exception("Success!")
-
-        # # Extract bad channel labels from findNoisyChannels results
-        # engine.eval("bad_channel_indices = EEG.etc.badChannels;", nargout=0, stdout=stdout_buffer, stderr=stderr_buffer)
-        # engine.eval("if ~isempty(bad_channel_indices), bad_channel_labels = {EEG.chanlocs(bad_channel_indices).labels}; else, bad_channel_labels = {}; end", nargout=0, stdout=stdout_buffer, stderr=stderr_buffer)
-        # bad_channels = engine.workspace['bad_channel_labels']
-        # # Convert MATLAB cell array to Python list of strings
-        # if hasattr(bad_channels, 'tolist'):
-        #     bad_channels = [str(ch) for ch in bad_channels.tolist()]
-        # else:
-        #     bad_channels = [str(ch) for ch in bad_channels]
-        # log_path = Path(__file__).parent.parent / config.log_path
-        # report_path = log_path / "bad_channel_report.txt"
-        # os.makedirs(log_path, exist_ok=True)
-        # lock_path = str(report_path) + ".lock"
-        # with FileLock(lock_path):
-        #     with open(report_path, 'a') as f: # add directory path and channels
-        #         f.write(f"{eeg_data.file_name},{','.join(bad_channels)}\n")
-
         # Save the cleaned data to a new .set file
-        cleaned_set_name = f"{set_name.replace('.set', '')}_relax.set"  # Construct the new filename
-        cleaned_set_path = matlab_workspace / cleaned_set_name
-        engine.eval(f"EEG = pop_saveset(EEG, 'filename', '{cleaned_set_name}');", nargout=0, stdout=stdout_buffer, stderr=stderr_buffer)  # Save the cleaned data
+        cleaned_set_name = f"{set_name.replace('.set', '')}_RELAX.set"  # Construct the new filename
+        cleaned_set_path = matlab_workspace / "RELAXProcessed/Cleaned_Data" / cleaned_set_name
 
     except matlab.engine.MatlabExecutionError as e:
         print(f"[RELAX] MATLAB error: {e}")
         raise
 
     # Update eeg_data with clean data
-    eeg_data.load_set(matlab_workspace / cleaned_set_name)
+    eeg_data.load_set(cleaned_set_path)
 
     # Delete temp .set files
     set_path.unlink()

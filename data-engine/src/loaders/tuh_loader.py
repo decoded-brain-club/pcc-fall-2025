@@ -11,8 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src")) # Add src director
 from dataset_loader import DatasetLoader
 
 class TUHLoader(DatasetLoader):
-    def __init__(self, config, raw: bool = True):
-        super().__init__(config, raw, config.cap)
+    def __init__(self, config, mode: str = 'unprocessed'):
+        super().__init__(config, mode=mode)
 
     @staticmethod
     def _extract_subject_id(filename: str) -> str:
