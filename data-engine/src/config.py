@@ -68,6 +68,10 @@ class Config:
         return self._resolve_path(self.config['data']['matlab_workspace_path'])
 
     @property
+    def caploc_file_path(self) -> str:
+        return self._resolve_path(self.config['data']['caploc_file_path'])
+
+    @property
     def cap(self) -> Optional[int]:
         cap_value = self.config['data'].get('cap')
         if cap_value is not None:

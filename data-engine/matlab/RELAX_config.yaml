@@ -3,6 +3,8 @@
 # - HorizontalEyeMovementTimepointsTestWindow=(2*RELAX_cfg.HorizontalEyeMovementTimepointsExceedingThreshold)-1;
 # - ICLabel_thresholds=[0 0 0 0 0 0 0];
 
+filename: null # set automatically by data engine
+
 Perform_targeted_wICA: 1 # This is the recommended artifact reduction method.
 Do_MWF_Once: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for no).
 Do_MWF_Twice: 0 # 1 = Perform the MWF cleaning a second time (1 for yes, 0 for no).

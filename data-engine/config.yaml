@@ -7,7 +7,8 @@ data:
   clean_validation_epochs_path: "data/clean/clean_validation_epochs"
   clean_testing_epochs_path: "data/clean/clean_testing_epochs"
   matlab_workspace_path: "matlab" # MATLAB workspace and dependencies
-  cap: 10 # Maximum number of data files to load (for testing), set to null for full dataset
+  cap: 3 # Maximum number of data files to load (for testing), set to null for full dataset
+  caploc_file_path: "caploc/tuh-tcp-ar-cap.elp" # Path to channel coordinates
 
 plugin:
   eeglab_absolute_path: "/Users/elijahghossein/Documents/MATLAB/eeglab2025.0.0" # Path to EEGLAB
@@ -49,7 +50,9 @@ processing:
                     "EEG SP2-REF",
                     "EEG EKG-REF",
                     "EEG C3P-REF",
-                    "EEG C4P-REF"
+                    "EEG C4P-REF",
+                    "EEG A1-REF",
+                    "EEG A2-REF"
                     ]  # List of channel names to exclude (if metadata is screwed)
 
 filters:

@@ -46,20 +46,20 @@ if isfield(RELAX_cfg, 'HEOGRightpattern') && iscell(RELAX_cfg.HEOGRightpattern)
 end
 
 % --- Example of additional raw print for testing (can be removed in final version) ---
-disp(' ');
-disp('--- Raw Data Types and Content from RELAX_cfg for Testing (within function) ---');
-fields = fieldnames(RELAX_cfg);
-for i = 1:length(fields)
-    fieldName = fields{i};
-    disp(['Field: ', fieldName]);
-    disp(RELAX_cfg.(fieldName));
-    disp(['  Class: ', class(RELAX_cfg.(fieldName))]);
-    if iscell(RELAX_cfg.(fieldName)) && ~isempty(RELAX_cfg.(fieldName))
-        disp(['  Class of first element (if cell): ', class(RELAX_cfg.(fieldName){1})]);
-    elseif isstring(RELAX_cfg.(fieldName)) && ~isempty(RELAX_cfg.(fieldName))
-        disp(['  Class of first element (if string array): ', class(RELAX_cfg.(fieldName)(1))]);
-    end
-end
-disp('------------------------------------------------------------------');
+% disp(' ');
+% disp('--- Raw Data Types and Content from RELAX_cfg for Testing (within function) ---');
+% fields = fieldnames(RELAX_cfg);
+% for i = 1:length(fields)
+%     fieldName = fields{i};
+%     disp(['Field: ', fieldName]);
+%     disp(RELAX_cfg.(fieldName));
+%     disp(['  Class: ', class(RELAX_cfg.(fieldName))]);
+%     if iscell(RELAX_cfg.(fieldName)) && ~isempty(RELAX_cfg.(fieldName))
+%         disp(['  Class of first element (if cell): ', class(RELAX_cfg.(fieldName){1})]);
+%     elseif isstring(RELAX_cfg.(fieldName)) && ~isempty(RELAX_cfg.(fieldName))
+%         disp(['  Class of first element (if string array): ', class(RELAX_cfg.(fieldName)(1))]);
+%     end
+% end
+% disp('------------------------------------------------------------------');
 
 end

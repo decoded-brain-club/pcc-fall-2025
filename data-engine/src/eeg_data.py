@@ -1,8 +1,10 @@
 import mne
+from mne.channels import make_dig_montage
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 import matplotlib.pyplot as plt
+import numpy as np        
 
 class EEGData:
     def __init__(self, config, file_path):
@@ -41,11 +43,36 @@ class EEGData:
 
         self._remove_channels(self.config.exclude_channels)  # Remove user specified channels if any
 
+        # Clean channel names (must come after _remove_channels())
+        self._clean_channel_names()
+
         channels = self.raw.info['ch_names']
         self.num_channels = len(channels) # Number of EEG channels
 
         if self.num_channels is not self.config.expected_channels:
             print(f"WARNING: inspect file: {self.file_name}, channels: {self.num_channels}")
+
+    def _clean_channel_names(self):
+        """Clean channel names by removing 'EEG ' prefix and '-REF' suffix, and converting to lowercase."""
+        cleaned_names = []
+        for ch_name in self.raw.info['ch_names']:
+
+            # NOTE: Can be added to config as a list of prefixes and suffixes to remove
+
+            # Remove prefixes
+            if ch_name.startswith('EEG '):
+                ch_name = ch_name[4:]
+            
+            # Remove suffixes
+            if ch_name.endswith('-REF'):
+                ch_name = ch_name[:-4]
+            
+            # Convert to lowercase
+            ch_name = ch_name.lower()
+            cleaned_names.append(ch_name)
+        
+        # Update the channel names in the raw data
+        self.raw.rename_channels(dict(zip(self.raw.info['ch_names'], cleaned_names)))
 
     def _remove_channels(self, channels_to_remove: List[str]):
         """Remove specified channels from the raw data."""
@@ -119,14 +146,47 @@ class EEGData:
         mne.export.export_raw(output_file, edf_raw, fmt='edf')
         print(f"Saved edf file to: {output_file}")
 
+    def _read_elp(self, filepath):
+        """Reads an .elp file and returns channel labels and coordinates."""
+        with open(filepath, 'r') as f:
+            lines = f.readlines()
+
+        n_channels = int(lines[0].strip())
+        data = []
+
+        for line in lines[1:n_channels+1]:
+            parts = line.strip().split()
+            if len(parts) >= 5:
+                label = parts[1]
+                x, y, z = map(float, parts[2:5])
+                data.append((label, x, y, z))
+
+        return data
+
     def save_to_set(self, save_dir: Path) -> tuple[Path, str]:
         """
-        Save the data to a .set file. Returns a tuple containing the full path to the saved .set file and the set file name.
+        Save the data to a .set file. If a .elp file is provided via config.caplocs_file_path,
+        it loads the montage and sets the channel locations before exporting.
+        
+        Returns a tuple containing the full path to the saved .set file and the set file name.
         """
+        # Apply montage from .elp file if provided
+        if getattr(self.config, 'caploc_file_path', None):
+            elp_data = self._read_elp(Path(__file__).parent.parent / self.config.caploc_file_path)
+            ch_names = [d[0] for d in elp_data]
+            coords = np.array([[d[1], d[2], d[3]] for d in elp_data])
+            montage = make_dig_montage(ch_pos=dict(zip(ch_names, coords)), coord_frame='head')
+            self.raw.set_montage(montage)
+
+        # Save to .set
         base_name = os.path.splitext(self.file_name)[0]
         set_name = f"{base_name}.set"
         set_path = save_dir / set_name
-        self.raw.export(str(set_path), fmt='eeglab', overwrite=True)
+        # Remove existing file if present to avoid export errors
+        if set_path.exists():
+            set_path.unlink()
+        self.raw.export(str(set_path), fmt='eeglab')
+
         return set_path, set_name
 
     def load_set(self, set_path: Path):

@@ -14,5 +14,8 @@
 /data/clean
 /data/temp
 /logs
+/matlab/*
+!matlab/load_RELAX_config.m
+!matlab/RELAX_config.yaml
 
 
