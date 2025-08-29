@@ -8,7 +8,7 @@ It contains 3 different models that are based on a convolutional net work (1) CL
 
 ## How to navigate directory
 
-#### src
+### src
 dataloader.py contains the class to load and match eeg data and returns raw and clean eeg data from the same patient
 metrics.py contains a functions to measure how successful the model performed against a test dataset
 
