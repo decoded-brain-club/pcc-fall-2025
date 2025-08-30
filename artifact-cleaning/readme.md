@@ -13,7 +13,7 @@ dataloader.py contains the class to load and match eeg data and returns raw and 
 metrics.py contains a functions to measure how successful the model performed against a test dataset
 
 ### notebook
-Contains jupyter notebooks of different model's training phase
+Contains 2 versions of jupyter notebooks. Kaggle version is meant to be imported directly into Kaggle and includes the model class, metric functions, and dataloader function (original files can be found in src). Regular version (without any additional names) is also meant to be ran without any additional code as well, except it won't run on Kaggle (or Google colab). Both versions are meant to be train the model.
 
 ### model
 Contains .py files of each model
